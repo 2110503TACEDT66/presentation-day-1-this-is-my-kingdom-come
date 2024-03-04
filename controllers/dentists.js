@@ -21,7 +21,12 @@ exports.getDentists  = async (req , res , next)=>{
     let queryStr = JSON.stringify(reqQuery) ;
     queryStr = queryStr.replace(/\b(gt|gte|lt|lte|in)\b/g , match=> `$${match}`);
 
-    query = Dentist.find(JSON.parse(queryStr)).populate('appointments');
+    if(req.user.role === "admin"){
+        query = Dentist.find(JSON.parse(queryStr)).populate('appointments');
+    }
+    else{
+        query = Dentist.find(JSON.parse(queryStr)) ;
+    }
 
     //Select Fields
     if(req.query.select){
@@ -77,8 +82,18 @@ exports.getDentists  = async (req , res , next)=>{
 //@access Public
 
 exports.getDentist =async( req , res , next)=>{
+
+    let query;
+
+    if(req.user.role === "admin"){
+        query = Dentist.findById(req.params.id).populate('appointments');
+    }
+    else{
+        query = Dentist.findById(req.params.id) ;
+    }
+
     try{
-        const dentist  = await Dentist.findById(req.params.id);
+        const dentist  = await query;
     
     if(!dentist){
         return res.status(400).json({success: false}) ;
